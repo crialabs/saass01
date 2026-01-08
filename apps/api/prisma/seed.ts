@@ -4,6 +4,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { admin } from 'better-auth/plugins';
+import { createAccessControl } from 'better-auth/plugins/access';
+import { adminAc, defaultStatements } from 'better-auth/plugins/admin/access';
 import { Pool } from 'pg';
 
 import { PrismaClient, Role } from '../src/generated/client/client.js';
@@ -11,6 +13,16 @@ import { PrismaClient, Role } from '../src/generated/client/client.js';
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
+
+const ac = createAccessControl(defaultStatements);
+
+const adminRole = ac.newRole({
+  ...adminAc.statements,
+});
+
+const superAdminRole = ac.newRole({
+  ...adminAc.statements,
+});
 
 const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -23,8 +35,12 @@ const auth = betterAuth({
   },
   plugins: [
     admin({
+      ac,
+      roles: {
+        admin: adminRole,
+        super_admin: superAdminRole,
+      },
       defaultRole: 'user',
-      adminRoles: ['admin', 'super_admin'],
     }),
   ],
 });
