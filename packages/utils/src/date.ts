@@ -5,7 +5,7 @@ export function formatDate(date: Date | string): string {
 
 export function formatDateTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleString('en-US', {
+  return d.toLocaleString('pt-BR', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -19,7 +19,7 @@ export function formatShortDate(
   includeYear = false
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleString('en-US', {
+  return d.toLocaleString('pt-BR', {
     month: 'short',
     day: 'numeric',
     ...(includeYear && { year: 'numeric' }),
