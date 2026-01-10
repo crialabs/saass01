@@ -1,8 +1,19 @@
 {
   "servers": {
+    "basic-memory": {
+      "args": ["basic-memory", "mcp"],
+      "command": "uvx"
+    },
     /*     "postgres": {
       "args": [
         "-y",
+    "next-devtools": {
+      "args": [
+        "-y",
+        "next-devtools-mcp@latest"
+      ],
+      "command": "npx"
+    },
         "@modelcontextprotocol/server-postgres",
         "postgres://0268b23de2de3cd2583c8a8ba457244891653a8ffb413eea9894751e23790137:sk_l87ZW4OLHKupoPulraWqI@db.prisma.io:5432/postgres?sslmode=require"
       ],

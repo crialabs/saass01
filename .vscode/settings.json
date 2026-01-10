@@ -1,27 +1,40 @@
 {
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "biomejs.biome",
-  "editor.codeActionsOnSave": {
-    "source.sort.json": "explicit",
-    "source.organizeLinkDefinitions": "explicit"
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
   },
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ],
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[graphql]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
   "typescript.tsdk": "node_modules/typescript/lib",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "emmet.showExpandedAbbreviation": "never",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.preferences.includePackageJsonAutoImports": "on",
   "typescript.validate.enable": true,
   "prisma.pinToPrisma6": false,
-  "[powershell]": {
-    "editor.defaultFormatter": "ms-vscode.powershell"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  }
+  "gitdoc.enabled": true
 }
