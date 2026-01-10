@@ -1,1 +1,15 @@
-pnpm typecheck && pnpm test:unit
+#!/bin/sh
+
+echo "Running pre-push checks..."
+
+# Run type checking
+echo "Running type checking..."
+if ! pnpm run typecheck; then
+    echo "Type checking failed. Please fix the type errors and try again."
+    exit 1
+else
+    echo "Type checking passed."
+fi
+
+echo "✅ All pre-push checks passed!"
+exit 0
