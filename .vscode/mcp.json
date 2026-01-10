@@ -1,5 +1,9 @@
 {
   "servers": {
+    "basic-memory": {
+      "args": ["basic-memory", "mcp"],
+      "command": "uvx"
+    },
     /*     "postgres": {
       "args": [
         "-y",

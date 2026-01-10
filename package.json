@@ -1,36 +1,5 @@
 {
-  "name": "saass01",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
   "description": "A full-stack TypeScript monorepo built with Blitzpack",
-  "scripts": {
-    "dev": "turbo run dev",
-    "dev:tui": "turbo run dev --ui=tui",
-    "dev:debug": "turbo run dev --verbose",
-    "dev:web": "turbo run dev --filter @repo/web",
-    "dev:api": "turbo run dev --filter @repo/api",
-    "dev:app": "turbo run dev --filter @repo/web --filter @repo/api",
-    "email": "turbo run email:dev",
-    "build": "turbo run build",
-    "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
-    "lint:fix": "turbo run lint:fix",
-    "test": "turbo run test",
-    "test:unit": "turbo run test:unit",
-    "test:integration": "turbo run test:integration",
-    "test:watch": "turbo run test:watch",
-    "test:coverage": "turbo run test:coverage",
-    "test:parallel": "turbo run test --concurrency=3",
-    "graph": "turbo run build --graph=graph.html && open graph.html",
-    "analyze": "turbo run build --dry-run=json > build-plan.json",
-    "prepare": "husky || true",
-    "db:generate": "pnpm --filter @repo/api db:generate",
-    "db:migrate": "pnpm --filter @repo/api db:migrate",
-    "db:push": "pnpm --filter @repo/api db:push",
-    "db:studio": "pnpm --filter @repo/api db:studio",
-    "db:seed": "pnpm --filter @repo/api db:seed"
-  },
   "devDependencies": {
     "@next/eslint-plugin-next": "^16.1.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -61,17 +30,48 @@
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"
   },
-  "packageManager": "pnpm@9.15.4",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=9.0.0"
   },
+  "name": "saass01",
+  "packageManager": "pnpm@9.15.4",
   "pnpm": {
     "overrides": {
-      "react": "19.2.1",
-      "react-dom": "19.2.1",
       "@types/react": "19.2.6",
-      "@types/react-dom": "19.2.3"
+      "@types/react-dom": "19.2.3",
+      "react": "19.2.1",
+      "react-dom": "19.2.1"
     }
-  }
+  },
+  "private": true,
+  "scripts": {
+    "analyze": "turbo run build --dry-run=json > build-plan.json",
+    "build": "turbo run build",
+    "db:generate": "pnpm --filter @repo/api db:generate",
+    "db:migrate": "pnpm --filter @repo/api db:migrate",
+    "db:push": "pnpm --filter @repo/api db:push",
+    "db:seed": "pnpm --filter @repo/api db:seed",
+    "db:studio": "pnpm --filter @repo/api db:studio",
+    "dev": "turbo run dev",
+    "dev:api": "turbo run dev --filter @repo/api",
+    "dev:app": "turbo run dev --filter @repo/web --filter @repo/api",
+    "dev:debug": "turbo run dev --verbose",
+    "dev:tui": "turbo run dev --ui=tui",
+    "dev:web": "turbo run dev --filter @repo/web",
+    "email": "turbo run email:dev",
+    "graph": "turbo run build --graph=graph.html && open graph.html",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "prepare": "husky || true",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "test:integration": "turbo run test:integration",
+    "test:parallel": "turbo run test --concurrency=3",
+    "test:unit": "turbo run test:unit",
+    "test:watch": "turbo run test:watch",
+    "typecheck": "turbo run typecheck"
+  },
+  "type": "module",
+  "version": "0.1.0"
 }
