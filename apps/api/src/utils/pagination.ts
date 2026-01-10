@@ -38,10 +38,6 @@ export function buildWhereClause(filters: Record<string, unknown>) {
 
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
-      if (key === 'search') {
-        // Search functionality - will be used by different resources
-        return;
-      }
       where[key] = value;
     }
   });

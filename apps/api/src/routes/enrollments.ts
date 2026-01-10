@@ -299,10 +299,10 @@ const enrollmentsRoutes: FastifyPluginAsync = async (app) => {
               EnrollmentResponseSchema.extend({
                 course: z.object({
                   id: z.string(),
-                  titulo: z.string(),
+                  nome: z.string(),
                   codigo: z.string().nullable(),
-                  cargaHoraria: z.number().nullable(),
-                  modalidade: z.string(),
+                  cargaHorariaTotal: z.number(),
+                  modality: z.string(),
                 }),
                 progressSummary: z
                   .object({
@@ -376,50 +376,131 @@ const enrollmentsRoutes: FastifyPluginAsync = async (app) => {
 
       // Include progress summary if requested
       if (includeProgress) {
-        const progressPromises = formattedEnrollments.map(
-          async (enrollment) => {
-            const [totalLessons, completedLessons] = await Promise.all([
-              app.prisma.lesson.count({
-                where: {
-                  module: {
-                    discipline: {
-                      courseId: enrollment.courseId,
-                    },
-                  },
-                },
-              }),
-              app.prisma.progress.count({
-                where: {
-                  studentId,
-                  status: 'concluida',
-                  lesson: {
-                    module: {
-                      discipline: {
-                        courseId: enrollment.courseId,
-                      },
-                    },
-                  },
-                },
-              }),
-            ]);
+        const courseIds = formattedEnrollments.map((e) => e.courseId);
 
-            const progressPercentage =
-              totalLessons > 0
-                ? Math.round((completedLessons / totalLessons) * 100)
-                : 0;
-
-            return {
-              ...enrollment,
-              progressSummary: {
-                totalLessons,
-                completedLessons,
-                progressPercentage,
+        // Get all lesson counts for all courses in a single query with groupBy
+        const lessonCounts = await app.prisma.lesson.groupBy({
+          by: ['moduleId'],
+          where: {
+            module: {
+              discipline: {
+                courseId: { in: courseIds },
               },
-            };
-          }
+            },
+          },
+          _count: { id: true },
+        });
+
+        // Get module to course mapping
+        const modules = await app.prisma.module.findMany({
+          where: {
+            discipline: {
+              courseId: { in: courseIds },
+            },
+          },
+          select: {
+            id: true,
+            discipline: {
+              select: {
+                courseId: true,
+              },
+            },
+          },
+        });
+
+        const moduleToCourse = new Map<string, string>(
+          modules.map((m): [string, string] => [m.id, m.discipline.courseId])
         );
 
-        formattedEnrollments = await Promise.all(progressPromises);
+        const totalLessonsByCourse = new Map<string, number>();
+        lessonCounts.forEach((lc) => {
+          const courseId = moduleToCourse.get(lc.moduleId);
+          if (courseId) {
+            totalLessonsByCourse.set(
+              courseId,
+              (totalLessonsByCourse.get(courseId) || 0) + lc._count.id
+            );
+          }
+        });
+
+        // Get all completed progress counts for all courses in a single query
+        const completedProgress = await app.prisma.progress.groupBy({
+          by: ['lessonId'],
+          where: {
+            studentId,
+            status: 'concluida',
+            lesson: {
+              module: {
+                discipline: {
+                  courseId: { in: courseIds },
+                },
+              },
+            },
+          },
+          _count: { id: true },
+        });
+
+        // Get lesson to course mapping
+        const lessons = await app.prisma.lesson.findMany({
+          where: {
+            module: {
+              discipline: {
+                courseId: { in: courseIds },
+              },
+            },
+          },
+          select: {
+            id: true,
+            module: {
+              select: {
+                discipline: {
+                  select: {
+                    courseId: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+
+        const lessonToCourse = new Map<string, string>(
+          lessons.map((l): [string, string] => [
+            l.id,
+            l.module.discipline.courseId,
+          ])
+        );
+
+        const completedLessonsByCourse = new Map<string, number>();
+        completedProgress.forEach((cp) => {
+          const courseId = lessonToCourse.get(cp.lessonId);
+          if (courseId) {
+            completedLessonsByCourse.set(
+              courseId,
+              (completedLessonsByCourse.get(courseId) || 0) + cp._count.id
+            );
+          }
+        });
+
+        // Add progress summary to each enrollment
+        formattedEnrollments = formattedEnrollments.map((enrollment: any) => {
+          const totalLessons =
+            totalLessonsByCourse.get(enrollment.courseId) || 0;
+          const completedLessons =
+            completedLessonsByCourse.get(enrollment.courseId) || 0;
+          const progressPercentage =
+            totalLessons > 0
+              ? Math.round((completedLessons / totalLessons) * 100)
+              : 0;
+
+          return {
+            ...enrollment,
+            progressSummary: {
+              totalLessons,
+              completedLessons,
+              progressPercentage,
+            },
+          };
+        });
       }
 
       return reply.status(200).send({ data: formattedEnrollments });
