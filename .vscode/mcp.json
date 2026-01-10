@@ -1,5 +1,13 @@
 {
   "servers": {
+    "basic-memory": {
+      "args": ["basic-memory", "mcp"],
+      "command": "uvx"
+    },
+    "next-devtools": {
+      "args": ["-y", "next-devtools-mcp@latest"],
+      "command": "npx"
+    },
     /*     "postgres": {
       "args": [
         "-y",
