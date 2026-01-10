@@ -100,7 +100,7 @@ const quizResultsRoutes: FastifyPluginAsync = async (app) => {
       );
 
       if (currentUser.id !== studentId && !isAdmin) {
-        return reply.status(401).send({
+        return reply.status(403).send({
           error: {
             message: 'You can only submit your own quiz results',
             code: 'FORBIDDEN',

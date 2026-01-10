@@ -68,6 +68,7 @@ const progressRoutes: FastifyPluginAsync = async (app) => {
           201: SuccessResponseSchema(ProgressResponseSchema),
           400: ErrorResponseSchema,
           401: ErrorResponseSchema,
+          403: ErrorResponseSchema,
           404: ErrorResponseSchema,
         },
         description: 'Record student progress for a lesson',
@@ -88,7 +89,7 @@ const progressRoutes: FastifyPluginAsync = async (app) => {
       );
 
       if (currentUser.id !== studentId && !isAdmin) {
-        return reply.status(401).send({
+        return reply.status(403).send({
           error: {
             message: 'You can only record your own progress',
             code: 'FORBIDDEN',

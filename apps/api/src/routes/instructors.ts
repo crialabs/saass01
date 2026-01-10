@@ -76,7 +76,7 @@ const instructorsRoutes: FastifyPluginAsync = async (app) => {
       );
 
       if (currentUser.id !== instructorId && !isAdmin) {
-        return reply.status(401).send({
+        return reply.status(403).send({
           error: {
             message: 'You can only view your own courses',
             code: 'FORBIDDEN',
