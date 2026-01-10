@@ -353,6 +353,23 @@ const { default: statsRoutes } = await import('@/routes/stats.js');
 const { default: metricsRoutes } = await import('@/routes/metrics.js');
 const { default: adminSessionsRoutes } =
   await import('@/routes/admin-sessions.js');
+const { default: coursesRoutes } = await import('@/routes/courses.js');
+const { default: disciplinesRoutes } = await import('@/routes/disciplines.js');
+const { default: modulesRoutes } = await import('@/routes/modules.js');
+const { default: lessonsRoutes } = await import('@/routes/lessons.js');
+const { default: materialsRoutes } = await import('@/routes/materials.js');
+const { default: quizzesRoutes } = await import('@/routes/quizzes.js');
+const { default: enrollmentsRoutes } = await import('@/routes/enrollments.js');
+const { default: progressRoutes } = await import('@/routes/progress.js');
+const { default: quizResultsRoutes } = await import('@/routes/quiz-results.js');
+const { default: certificatesRoutes } =
+  await import('@/routes/certificates.js');
+const { default: reportsRoutes } = await import('@/routes/reports.js');
+const { default: bulkRoutes } = await import('@/routes/bulk.js');
+const { default: dashboardRoutes } = await import('@/routes/dashboard.js');
+const { default: instructorsRoutes } = await import('@/routes/instructors.js');
+const { default: notificationsRoutes } =
+  await import('@/routes/notifications.js');
 
 metricsService.start();
 
@@ -369,6 +386,21 @@ await app.register(
     await app.register(statsRoutes);
     await app.register(metricsRoutes);
     await app.register(adminSessionsRoutes);
+    await app.register(coursesRoutes);
+    await app.register(disciplinesRoutes);
+    await app.register(modulesRoutes);
+    await app.register(lessonsRoutes);
+    await app.register(materialsRoutes);
+    await app.register(quizzesRoutes);
+    await app.register(enrollmentsRoutes);
+    await app.register(progressRoutes);
+    await app.register(quizResultsRoutes);
+    await app.register(certificatesRoutes);
+    await app.register(reportsRoutes);
+    await app.register(bulkRoutes);
+    await app.register(dashboardRoutes);
+    await app.register(instructorsRoutes);
+    await app.register(notificationsRoutes);
   },
   { prefix: '/api' }
 );

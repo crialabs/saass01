@@ -23,6 +23,9 @@ model User {
   emailVerified Boolean   @default(false)
   name          String?
   image         String?
+  billingProvider String?
+  billingCustomerId String?
+  paymentMethod  Json?
   role          Role      @default(user)
   banned        Boolean   @default(false)
   banReason     String?
@@ -33,6 +36,10 @@ model User {
   sessions      Session[]
   accounts      Account[]
   uploads       Upload[]
+  enrollments   Enrollment[]
+  progresses    Progress[]
+  quizAttempts  QuizAttempt[]
+  certificates  Certificate[]
 
   @@map("users")
 }
@@ -99,7 +106,7 @@ model Upload {
   filename     String   @unique 
   originalName String 
   mimeType     String
-  size         Int     // in Bytes
+  size         Int
   url          String 
   userId       String
   createdAt    DateTime @default(now())
@@ -110,5 +117,418 @@ model Upload {
   @@index([userId])
   @@index([createdAt])
   @@map("uploads")
+}
+
+enum CourseLevel {
+  tecnico
+  graduacao
+  pos_graduacao
+}
+
+enum CourseGrade {
+  tecnologo
+  bacharelado
+  licenciatura
+}
+
+enum CourseModality {
+  presencial
+  ead
+  hibrido
+}
+
+enum CourseStatus {
+  rascunho
+  publicado
+  arquivado
+}
+
+enum LessonType {
+  video_gravado
+  video_ao_vivo
+  texto
+  quiz
+  atividade_pratica
+  leitura
+}
+
+enum MaterialType {
+  slides
+  pdf
+  video
+  audio
+  link
+  codigo_fonte
+  planilha
+  outro
+}
+
+enum QuestionType {
+  multipla_escolha
+  verdadeiro_falso
+  dissertativa
+  correspondencia
+}
+
+enum EnrollmentStatus {
+  ativo
+  suspenso
+  concluido
+  cancelado
+  trancado
+}
+
+enum ProgressStatus {
+  nao_iniciada
+  em_progresso
+  concluida
+}
+
+enum CertificateType {
+  conclusao
+  participacao
+  extensao
+}
+
+enum CertificateStatus {
+  gerado
+  emitido
+  revogado
+}
+
+model Course {
+  id                    String          @id @default(cuid())
+  codigo                String          @unique
+  nome                  String
+  descricao             String?         @db.Text
+  descricaoCurta        String?
+  cargaHorariaTotal     Int
+  cargaHorariaMinima    Int?
+  nivel                 CourseLevel
+  grau                  CourseGrade?
+  duracaoSemestres      Int
+  modality              CourseModality  @default(presencial)
+  status                CourseStatus    @default(rascunho)
+  ativo                 Boolean         @default(true)
+  categoryId            String?
+  subcategoryId         String?
+  coordenadorId         String?
+  dataInicioVigencia    DateTime?
+  thumbnailPath         String?
+  bannerPath            String?
+  customFields          Json?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  disciplines           Discipline[]
+  enrollments           Enrollment[]
+  certificates          Certificate[]
+
+  @@index([codigo])
+  @@index([status])
+  @@index([nivel])
+  @@map("courses")
+}
+
+model Discipline {
+  id                    String    @id @default(cuid())
+  courseId              String
+  codigo                String
+  nome                  String
+  ementa                String?   @db.Text
+  cargaHorariaTeorica   Int
+  cargaHorariaPratica   Int
+  cargaHorariaTotal     Int
+  areaConhecimento      String?
+  periodo               Int
+  obrigatoria           Boolean   @default(true)
+  objetivos             String[]
+  competencias          String[]
+  prerequisitos         String[]
+  bibliografiaBasica    String[]
+  ativo                 Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  course                Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  modules               Module[]
+
+  @@unique([courseId, codigo])
+  @@index([courseId])
+  @@index([periodo])
+  @@map("disciplines")
+}
+
+model Module {
+  id                    String    @id @default(cuid())
+  disciplineId          String
+  titulo                String
+  descricao             String?   @db.Text
+  ordem                 Int
+  cargaHorariaEstimada  Int?
+  objetivosAprendizagem String[]
+  ativo                 Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  discipline            Discipline @relation(fields: [disciplineId], references: [id], onDelete: Cascade)
+  lessons               Lesson[]
+
+  @@index([disciplineId])
+  @@index([ordem])
+  @@map("modules")
+}
+
+model Lesson {
+  id                        String       @id @default(cuid())
+  moduleId                  String
+  titulo                    String
+  descricao                 String?      @db.Text
+  tipo                      LessonType
+  ordem                     Int
+  videoUrl                  String?
+  duracaoMinutos            Int?
+  thumbnailUrl              String?
+  obrigatoria               Boolean      @default(true)
+  liberada                  Boolean      @default(true)
+  permiteDownload           Boolean      @default(false)
+  percentualConclusaoMinimo Int          @default(100)
+  marcaDaguaAtiva           Boolean      @default(false)
+  transcricaoDisponivel     Boolean      @default(false)
+  legendasDisponiveis       String[]
+  resolucoesDisponiveis     String[]
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+
+  module                    Module       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  materials                 Material[]
+  quizzes                   Quiz[]
+  progresses                Progress[]
+
+  @@index([moduleId])
+  @@index([ordem])
+  @@map("lessons")
+}
+
+model Material {
+  id              String       @id @default(cuid())
+  lessonId        String
+  titulo          String
+  tipo            MaterialType
+  descricao       String?      @db.Text
+  arquivoPath     String?
+  url             String?
+  tamanhoBytes    Int?
+  formato         String?
+  obrigatorio     Boolean      @default(false)
+  ordem           Int
+  downloadsCount  Int          @default(0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  lesson          Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+  @@index([ordem])
+  @@map("materials")
+}
+
+model Quiz {
+  id                      String       @id @default(cuid())
+  lessonId                String
+  titulo                  String
+  descricao               String?      @db.Text
+  instrucoes              String?      @db.Text
+  tempoLimiteMinutos      Int?
+  notaMinimaAprovacao     Float
+  tentativasMaximas       Int          @default(3)
+  ordemAleatoria          Boolean      @default(false)
+  mostrarRespostaImediata Boolean      @default(false)
+  mostrarGabaritoFinal    Boolean      @default(true)
+  permitirRevisao         Boolean      @default(true)
+  pontuacaoTotal          Int
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  lesson                  Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions               Question[]
+  attempts                QuizAttempt[]
+
+  @@index([lessonId])
+  @@map("quizzes")
+}
+
+model Question {
+  id          String       @id @default(cuid())
+  quizId      String
+  enunciado   String       @db.Text
+  tipo        QuestionType
+  ordem       Int
+  pontos      Int
+  obrigatoria Boolean      @default(true)
+  explicacao  String?      @db.Text
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  quiz        Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options     QuestionOption[]
+  answers     QuizAnswer[]
+
+  @@index([quizId])
+  @@index([ordem])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  texto      String   @db.Text
+  correta    Boolean  @default(false)
+  feedback   String?  @db.Text
+  ordem      Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedBy QuizAnswer[]
+
+  @@index([questionId])
+  @@map("question_options")
+}
+
+model Enrollment {
+  id                     String           @id @default(cuid())
+  studentId              String
+  courseId               String
+  enrollmentDate         DateTime         @default(now())
+  startDate              DateTime?
+  expectedCompletionDate DateTime?
+  status                 EnrollmentStatus @default(ativo)
+  paymentMethod          String?
+  installments           Int?
+  scholarshipPercentage  Float            @default(0)
+  contactEmail           String?
+  contactPhone           String?
+  metadata               Json?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+
+  student                User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course                 Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@index([studentId])
+  @@index([courseId])
+  @@index([status])
+  @@map("enrollments")
+}
+
+model Progress {
+  id                   String         @id @default(cuid())
+  studentId            String
+  lessonId             String
+  moduleId             String
+  disciplineId         String
+  courseId             String
+  status               ProgressStatus @default(nao_iniciada)
+  watchedMinutes       Int?
+  totalMinutes         Int?
+  completionPercentage Float          @default(0)
+  viewedAt             DateTime?
+  completedAt          DateTime?
+  score                Float?
+  notes                String?        @db.Text
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  student              User           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson               Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, lessonId])
+  @@index([studentId])
+  @@index([courseId])
+  @@index([status])
+  @@map("progress")
+}
+
+model QuizAttempt {
+  id                String   @id @default(cuid())
+  quizId            String
+  studentId         String
+  courseId          String
+  disciplineId      String
+  totalQuestions    Int
+  correctAnswers    Int
+  score             Float
+  scorePercentage   Float
+  passed            Boolean
+  timeSpentSeconds  Int
+  attempts          Int
+  submittedAt       DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  quiz              Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  student           User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers           QuizAnswer[]
+
+  @@index([quizId])
+  @@index([studentId])
+  @@index([courseId])
+  @@map("quiz_attempts")
+}
+
+model QuizAnswer {
+  id              String         @id @default(cuid())
+  attemptId       String
+  questionId      String
+  questionText    String         @db.Text
+  selectedOptionId String?
+  correctOptionId  String?
+  correct         Boolean
+  pointsEarned    Int
+  createdAt       DateTime       @default(now())
+
+  attempt         QuizAttempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question        Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption  QuestionOption? @relation(fields: [selectedOptionId], references: [id])
+
+  @@index([attemptId])
+  @@index([questionId])
+  @@map("quiz_answers")
+}
+
+model Certificate {
+  id                   String            @id @default(cuid())
+  studentId            String
+  courseId             String
+  certificateType      CertificateType
+  issueDate            DateTime          @default(now())
+  completionDate       DateTime?
+  overallScore         Float?
+  certificateNumber    String            @unique
+  studentName          String
+  studentRegistration  String
+  courseName           String
+  courseCode           String
+  totalHours           Int
+  signatureLine1       String?
+  signatureLine1Title  String?
+  signatureLine2       String?
+  signatureLine2Title  String?
+  digitalSignature     Boolean           @default(false)
+  digitalSignatureHash String?
+  status               CertificateStatus @default(gerado)
+  metadata             Json?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  student              User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course               Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([courseId])
+  @@index([certificateNumber])
+  @@map("certificates")
 }
 
