@@ -7,8 +7,10 @@ import {
   type CreateUser,
   type UpdateUser,
   type User,
+  UserSchema,
 } from '@repo/packages-types/user';
 import { ForbiddenError, NotFoundError } from '@repo/packages-utils/errors';
+import { z } from 'zod';
 
 import type { LoggerService } from '@/common/logger.service';
 import type { PrismaClient } from '@/generated/client/client.js';
@@ -46,7 +48,7 @@ export class UsersService {
     const totalPages = Math.ceil(total / query.limit);
 
     return {
-      data: users as User[],
+      data: z.array(UserSchema).parse(users),
       pagination: {
         page: query.page,
         limit: query.limit,
@@ -66,7 +68,7 @@ export class UsersService {
       throw new NotFoundError('User not found', { userId: id });
     }
 
-    return user as User;
+    return UserSchema.parse(user);
   }
 
   async createUser(createUser: CreateUser): Promise<User> {
@@ -80,7 +82,7 @@ export class UsersService {
     });
 
     this.logger.info('User created successfully', { userId: user.id });
-    return user as User;
+    return UserSchema.parse(user);
   }
 
   async updateUser(
@@ -138,7 +140,7 @@ export class UsersService {
       targetId,
       changes: Object.keys(updateUser),
     });
-    return updatedUser as User;
+    return UserSchema.parse(updatedUser);
   }
 
   async deleteUser(
