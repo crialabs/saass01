@@ -3,8 +3,12 @@ import fp from 'fastify-plugin';
 
 import type { Env } from '@/config/env';
 import { loadEnv } from '@/config/env';
+import { CoursesRepository } from '@/repositories/courses-repository';
+import { DisciplinesRepository } from '@/repositories/disciplines-repository';
 import { AccountsService } from '@/services/accounts.service';
 import { AuthorizationService } from '@/services/authorization.service';
+import { CoursesService } from '@/services/courses.service';
+import { DisciplinesService } from '@/services/disciplines.service';
 import { EmailService } from '@/services/email.service';
 import { FileStorageService } from '@/services/file-storage.service';
 import { PasswordService } from '@/services/password.service';
@@ -25,6 +29,8 @@ declare module 'fastify' {
     uploadsService: UploadsService;
     accountsService: AccountsService;
     statsService: StatsService;
+    coursesService: CoursesService;
+    disciplinesService: DisciplinesService;
   }
 }
 
@@ -49,6 +55,16 @@ const servicesPlugin: FastifyPluginAsync = async (app) => {
   const accountsService = new AccountsService(app.prisma, app.logger);
   const statsService = new StatsService(app.prisma, app.logger);
 
+  const coursesRepository = new CoursesRepository(app.prisma);
+  const coursesService = new CoursesService(coursesRepository, app.logger);
+
+  const disciplinesRepository = new DisciplinesRepository(app.prisma);
+  const disciplinesService = new DisciplinesService(
+    disciplinesRepository,
+    coursesRepository,
+    app.logger
+  );
+
   app.decorate('env', env);
   app.decorate('authorizationService', authorizationService);
   app.decorate('emailService', emailService);
@@ -59,6 +75,8 @@ const servicesPlugin: FastifyPluginAsync = async (app) => {
   app.decorate('uploadsService', uploadsService);
   app.decorate('accountsService', accountsService);
   app.decorate('statsService', statsService);
+  app.decorate('coursesService', coursesService);
+  app.decorate('disciplinesService', disciplinesService);
 
   app.log.info('[+] Services configured');
 };
