@@ -26,9 +26,8 @@ const env = loadEnv();
  *   - Responds with `{ error: { message, code: "INTERNAL_ERROR" } }`.
  *
  * All errors are logged via `request.log.error` with request context, and implementation details are
- * hidden from clients in production for unhandled server errors.
- */
 export default fp(async (app: FastifyInstance) => {
+  const env = loadEnv();
   app.setErrorHandler(
     (
       error: FastifyError,
