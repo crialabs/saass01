@@ -29,7 +29,11 @@ export abstract class BasePrismaRepository<T> implements BaseRepository<T> {
   ) {}
 
   protected getModel() {
-    return (this.prisma as any)[this.modelName];
+    const model = (this.prisma as any)[this.modelName];
+    if (!model) {
+      throw new Error(`Invalid Prisma model name: ${this.modelName}`);
+    }
+    return model;
   }
 
   async findById(id: string): Promise<T | null> {

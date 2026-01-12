@@ -50,7 +50,12 @@ export class DisciplinesRepository extends BasePrismaRepository<Discipline> {
     courseId: string,
     filters?: Partial<DisciplineFilters>
   ): Promise<Discipline[]> {
-    const where: any = { courseId };
+    const where: {
+      courseId: string;
+      periodo?: number;
+      obrigatoria?: boolean;
+      ativo?: boolean;
+    } = { courseId };
 
     if (filters?.periodo !== undefined) where.periodo = filters.periodo;
     if (filters?.obrigatoria !== undefined)
@@ -63,7 +68,7 @@ export class DisciplinesRepository extends BasePrismaRepository<Discipline> {
     });
   }
 
-  async findByIdWithModules(id: string): Promise<Discipline | null> {
+  async findByIdWithModules(id: string): Promise<DisciplineWithModules | null> {
     return this.prisma.discipline.findUnique({
       where: { id },
       include: {
@@ -73,4 +78,8 @@ export class DisciplinesRepository extends BasePrismaRepository<Discipline> {
       },
     });
   }
+}
+
+export interface DisciplineWithModules extends Discipline {
+  modules: { id: string }[];
 }

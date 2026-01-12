@@ -11,6 +11,7 @@ import type {
   CreateDisciplineData,
   DisciplineFilters,
   DisciplinesRepository,
+  DisciplineWithModules,
 } from '@/repositories/disciplines-repository';
 
 export interface UpdateDisciplineData {
@@ -126,7 +127,7 @@ export class DisciplinesService {
       }
     }
 
-    const updatedDiscipline = await this.repository.update(id, data as any);
+    const updatedDiscipline = await this.repository.update(id, data);
     this.logger.info('Discipline updated successfully', { disciplineId: id });
 
     return updatedDiscipline;
@@ -135,18 +136,19 @@ export class DisciplinesService {
   async deleteDiscipline(id: string, force: boolean = false): Promise<void> {
     this.logger.info('Deleting discipline', { disciplineId: id, force });
 
-    const discipline = await this.repository.findByIdWithModules(id);
+    const discipline: DisciplineWithModules | null =
+      await this.repository.findByIdWithModules(id);
     if (!discipline) {
       throw new NotFoundError('Discipline not found', { disciplineId: id });
     }
 
-    const hasModules = (discipline as any).modules?.length > 0;
+    const hasModules = discipline.modules.length > 0;
 
     if (hasModules && !force) {
       throw new ValidationError(
         'Cannot delete discipline with modules. Use force=true to cascade delete.',
         {
-          modules: (discipline as any).modules.length,
+          modules: discipline.modules.length,
         }
       );
     }
@@ -155,7 +157,7 @@ export class DisciplinesService {
       await this.repository.delete(id);
       this.logger.info('Discipline deleted permanently', { disciplineId: id });
     } else {
-      await this.repository.update(id, { ativo: false } as any);
+      await this.repository.update(id, { ativo: false });
       this.logger.info('Discipline deactivated', { disciplineId: id });
     }
   }

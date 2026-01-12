@@ -62,7 +62,18 @@ export class CoursesRepository extends BasePrismaRepository<Course> {
     skip: number,
     take: number
   ): Promise<{ courses: Course[]; total: number }> {
-    const where: any = {};
+    const where: {
+      status?: CourseStatus;
+      nivel?: CourseLevel;
+      modality?: CourseModality;
+      coordenadorId?: string;
+      ativo?: boolean;
+      OR?: Array<{
+        nome?: { contains: string; mode: 'insensitive' };
+        descricao?: { contains: string; mode: 'insensitive' };
+        codigo?: { contains: string; mode: 'insensitive' };
+      }>;
+    } = {};
 
     if (filters.status) where.status = filters.status;
     if (filters.nivel) where.nivel = filters.nivel;

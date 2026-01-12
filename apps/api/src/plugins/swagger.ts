@@ -23,7 +23,7 @@ const swaggerPlugin: FastifyPluginAsync = async (app) => {
         version: '1.0.0',
         contact: {
           name: 'Equipe de Desenvolvimento Coltec',
-          email: 'suporte@exemplo.com',
+          email: 'dev@coltec.app',
         },
         license: {
           name: 'MIT',
