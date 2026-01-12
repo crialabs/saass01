@@ -340,36 +340,52 @@ app.get('/health', async (request, reply) => {
   }
 });
 
-const { default: usersRoutes } = await import('@/routes/users.js');
-const { default: sessionsRoutes } = await import('@/routes/sessions.js');
-const { default: passwordRoutes } = await import('@/routes/password.js');
+const { default: usersRoutes } = await import('@/routes/v1/accounts/users.js');
+const { default: sessionsRoutes } =
+  await import('@/routes/v1/accounts/sessions.js');
+const { default: passwordRoutes } =
+  await import('@/routes/v1/accounts/password.js');
 const { default: verificationRoutes } =
-  await import('@/routes/verification.js');
-const { default: uploadsRoutes } = await import('@/routes/uploads.js');
+  await import('@/routes/v1/accounts/verification.js');
+const { default: uploadsRoutes } =
+  await import('@/routes/v1/upload/uploads.js');
 const { default: uploadsServeRoutes } =
-  await import('@/routes/uploads-serve.js');
-const { default: accountsRoutes } = await import('@/routes/accounts.js');
-const { default: statsRoutes } = await import('@/routes/stats.js');
-const { default: metricsRoutes } = await import('@/routes/metrics.js');
+  await import('@/routes/v1/upload/uploads-serve.js');
+const { default: accountsRoutes } =
+  await import('@/routes/v1/accounts/accounts.js');
+const { default: statsRoutes } = await import('@/routes/v1/stats/stats.js');
+const { default: metricsRoutes } =
+  await import('@/routes/v1/metrics/metrics.js');
 const { default: adminSessionsRoutes } =
-  await import('@/routes/admin-sessions.js');
-const { default: coursesRoutes } = await import('@/routes/courses.js');
-const { default: disciplinesRoutes } = await import('@/routes/disciplines.js');
-const { default: modulesRoutes } = await import('@/routes/modules.js');
-const { default: lessonsRoutes } = await import('@/routes/lessons.js');
-const { default: materialsRoutes } = await import('@/routes/materials.js');
-const { default: quizzesRoutes } = await import('@/routes/quizzes.js');
-const { default: enrollmentsRoutes } = await import('@/routes/enrollments.js');
-const { default: progressRoutes } = await import('@/routes/progress.js');
-const { default: quizResultsRoutes } = await import('@/routes/quiz-results.js');
+  await import('@/routes/v1/accounts/admin-sessions.js');
+const { default: coursesRoutes } =
+  await import('@/routes/v1/courses/courses.js');
+const { default: disciplinesRoutes } =
+  await import('@/routes/v1/diciplines/disciplines.js');
+const { default: modulesRoutes } =
+  await import('@/routes/v1/modules/modules.js');
+const { default: lessonsRoutes } =
+  await import('@/routes/v1/lesson/lessons.js');
+const { default: materialsRoutes } =
+  await import('@/routes/v1/materials/materials.js');
+const { default: quizzesRoutes } = await import('@/routes/v1/quiz/quizzes.js');
+const { default: enrollmentsRoutes } =
+  await import('@/routes/v1/enrrolment/enrollments.js');
+const { default: progressRoutes } =
+  await import('@/routes/v1/progress/progress.js');
+const { default: quizResultsRoutes } =
+  await import('@/routes/v1/quiz/quiz-results.js');
 const { default: certificatesRoutes } =
-  await import('@/routes/certificates.js');
-const { default: reportsRoutes } = await import('@/routes/reports.js');
-const { default: bulkRoutes } = await import('@/routes/bulk.js');
-const { default: dashboardRoutes } = await import('@/routes/dashboard.js');
-const { default: instructorsRoutes } = await import('@/routes/instructors.js');
+  await import('@/routes/v1/certificates/certificates.js');
+const { default: reportsRoutes } =
+  await import('@/routes/v1/dashboard/reports.js');
+const { default: bulkRoutes } = await import('@/routes/v1/bulk/bulk.js');
+const { default: dashboardRoutes } =
+  await import('@/routes/v1/dashboard/dashboard.js');
+const { default: instructorsRoutes } =
+  await import('@/routes/v1/instructors/instructors.js');
 const { default: notificationsRoutes } =
-  await import('@/routes/notifications.js');
+  await import('@/routes/v1/notification/notifications.js');
 
 metricsService.start();
 
