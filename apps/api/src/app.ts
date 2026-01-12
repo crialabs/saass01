@@ -3,8 +3,7 @@ import cors from '@fastify/cors';
 import formbody from '@fastify/formbody';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
-import { AppError } from '@repo/packages-utils/errors';
-import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 import Fastify from 'fastify';
 import {
   serializerCompiler,
@@ -154,58 +153,9 @@ await app.register(scalarPlugin);
 const { default: schedulePlugin } = await import('@/plugins/schedule.js');
 await app.register(schedulePlugin);
 
-const errorHandler = (
-  error: FastifyError,
-  request: FastifyRequest,
-  reply: FastifyReply
-): void => {
-  request.log.error(
-    {
-      err: error,
-      reqId: request.id,
-      url: request.url,
-      method: request.method,
-    },
-    'Request error'
-  );
-
-  if (error instanceof AppError) {
-    void reply.status(error.statusCode).send({
-      error: {
-        message: error.message,
-        code: error.code,
-        ...(error.details && { details: error.details }),
-      },
-    });
-    return;
-  }
-
-  if (error.validation) {
-    void reply.status(400).send({
-      error: {
-        message: 'Validation failed',
-        code: 'VALIDATION_ERROR',
-        details: error.validation,
-      },
-    });
-    return;
-  }
-
-  const isProduction = env.NODE_ENV === 'production';
-  const statusCode = error.statusCode || 500;
-
-  void reply.status(statusCode).send({
-    error: {
-      message:
-        isProduction && statusCode === 500
-          ? 'Internal server error'
-          : error.message || 'An error occurred',
-      code: 'INTERNAL_ERROR',
-    },
-  });
-};
-
-app.setErrorHandler(errorHandler);
+const { default: errorHandlerPlugin } =
+  await import('@/plugins/error-handler.js');
+await app.register(errorHandlerPlugin);
 
 app.addHook('onRequest', async (request) => {
   if (env.LOG_LEVEL === 'detailed' || env.LOG_LEVEL === 'verbose') {

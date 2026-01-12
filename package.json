@@ -2,6 +2,8 @@
   "description": "A full-stack TypeScript monorepo built with Blitzpack",
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
+    "@commitlint/cli": "^20.3.1",
+    "@commitlint/config-conventional": "^20.3.1",
     "@next/eslint-plugin-next": "^16.1.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
