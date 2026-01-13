@@ -13,7 +13,7 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 
 import { requireAuth, requireRole } from '@/hooks/auth';
-import { buildPaginationResponse, buildPrismaQuery } from '@/utils/pagination';
+import { buildPaginationResponse } from '@/utils/pagination';
 
 const CourseLevelSchema = z.enum(['tecnico', 'graduacao', 'pos_graduacao']);
 const CourseGradeSchema = z.enum(['tecnologo', 'bacharelado', 'licenciatura']);
@@ -111,43 +111,12 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
     async (request, reply) => {
       const body = request.body as CreateCourseInput;
 
-      const existingCourse = await app.prisma.course.findUnique({
-        where: { codigo: body.codigo },
-      });
-
-      if (existingCourse) {
-        return reply.status(409).send({
-          error: {
-            message: 'Course with this code already exists',
-            code: 'COURSE_CODE_EXISTS',
-          },
-        });
-      }
-
-      const course = await app.prisma.course.create({
-        data: {
-          codigo: body.codigo,
-          nome: body.nome,
-          descricao: body.descricao,
-          descricaoCurta: body.descricaoCurta,
-          cargaHorariaTotal: body.cargaHorariaTotal,
-          cargaHorariaMinima: body.cargaHorariaMinima,
-          nivel: body.nivel,
-          grau: body.grau,
-          duracaoSemestres: body.duracaoSemestres,
-          modality: body.modality ?? 'presencial',
-          status: body.status ?? 'rascunho',
-          ativo: body.ativo ?? true,
-          categoryId: body.categoryId,
-          subcategoryId: body.subcategoryId,
-          coordenadorId: body.coordenadorId,
-          dataInicioVigencia: body.dataInicioVigencia
-            ? new Date(body.dataInicioVigencia)
-            : null,
-          thumbnailPath: body.thumbnailPath,
-          bannerPath: body.bannerPath,
-          customFields: body.customFields as any,
-        },
+      const course = await app.coursesService.createCourse({
+        ...body,
+        dataInicioVigencia: body.dataInicioVigencia
+          ? new Date(body.dataInicioVigencia)
+          : undefined,
+        customFields: body.customFields as any,
       });
 
       return reply.status(201).send({
@@ -163,7 +132,6 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
     }
   );
 
-  // GET /api/courses - Lista cursos com filtros e paginação
   server.get(
     '/courses',
     {
@@ -190,45 +158,28 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
         ativo,
       } = query;
 
-      // Build where clause
-      const where: any = {};
-
-      if (status) where.status = status;
-      if (nivel) where.nivel = nivel;
-      if (modality) where.modality = modality;
-      if (coordenadorId) where.coordenadorId = coordenadorId;
-      if (ativo !== undefined) where.ativo = ativo;
-
-      // Search functionality
-      if (search) {
-        where.OR = [
-          { nome: { contains: search, mode: 'insensitive' } },
-          { descricao: { contains: search, mode: 'insensitive' } },
-          { codigo: { contains: search, mode: 'insensitive' } },
-        ];
-      }
-
-      // Authorization: public can only see published + active courses
       const session = (request as any).session;
-      const isAdmin =
-        session?.user?.role &&
-        ['admin', 'super_admin'].includes(session.user.role);
+      const userRole = session?.user?.role as
+        | 'admin'
+        | 'super_admin'
+        | 'user'
+        | undefined;
 
-      if (!isAdmin) {
-        where.status = 'publicado';
-        where.ativo = true;
-      }
+      const result = await app.coursesService.listCourses({
+        page,
+        limit,
+        filters: {
+          status,
+          nivel,
+          modality,
+          search,
+          coordenadorId,
+          ativo,
+        },
+        userRole,
+      });
 
-      const [courses, total] = await Promise.all([
-        app.prisma.course.findMany({
-          where,
-          ...buildPrismaQuery({ page, limit }),
-          orderBy: { createdAt: 'desc' },
-        }),
-        app.prisma.course.count({ where }),
-      ]);
-
-      const transformedCourses = courses.map((course) => ({
+      const transformedCourses = result.courses.map((course) => ({
         ...course,
         dataInicioVigencia: course.dataInicioVigencia?.toISOString() ?? null,
         customFields: (course.customFields as Record<string, unknown>) ?? null,
@@ -238,12 +189,11 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
 
       return reply.status(200).send({
         data: transformedCourses,
-        pagination: buildPaginationResponse(total, page, limit),
+        pagination: buildPaginationResponse(result.total, page, limit),
       });
     }
   );
 
-  // GET /api/courses/:id - Get course by ID
   server.get(
     '/courses/:id',
     {
@@ -260,33 +210,14 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
     async (request, reply) => {
       const { id } = request.params as { id: string };
 
-      const course = await app.prisma.course.findUnique({
-        where: { id },
-      });
-
-      if (!course) {
-        return reply.status(404).send({
-          error: {
-            message: 'Course not found',
-            code: 'COURSE_NOT_FOUND',
-          },
-        });
-      }
-
-      // Authorization: public can only see published + active courses
       const session = (request as any).session;
-      const isAdmin =
-        session?.user?.role &&
-        ['admin', 'super_admin'].includes(session.user.role);
+      const userRole = session?.user?.role as
+        | 'admin'
+        | 'super_admin'
+        | 'user'
+        | undefined;
 
-      if (!isAdmin && (course.status !== 'publicado' || !course.ativo)) {
-        return reply.status(404).send({
-          error: {
-            message: 'Course not found',
-            code: 'COURSE_NOT_FOUND',
-          },
-        });
-      }
+      const course = await app.coursesService.getCourseById(id, userRole);
 
       return reply.status(200).send({
         data: {
@@ -301,7 +232,6 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
     }
   );
 
-  // PUT /api/courses/:id - Update course
   server.put(
     '/courses/:id',
     {
@@ -325,44 +255,12 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
       const { id } = request.params as { id: string };
       const body = request.body as UpdateCourseInput;
 
-      const existingCourse = await app.prisma.course.findUnique({
-        where: { id },
-      });
-
-      if (!existingCourse) {
-        return reply.status(404).send({
-          error: {
-            message: 'Course not found',
-            code: 'COURSE_NOT_FOUND',
-          },
-        });
-      }
-
-      // Check for duplicate codigo if being updated
-      if (body.codigo && body.codigo !== existingCourse.codigo) {
-        const duplicateCourse = await app.prisma.course.findUnique({
-          where: { codigo: body.codigo },
-        });
-
-        if (duplicateCourse) {
-          return reply.status(409).send({
-            error: {
-              message: 'Course with this code already exists',
-              code: 'COURSE_CODE_EXISTS',
-            },
-          });
-        }
-      }
-
-      const updatedCourse = await app.prisma.course.update({
-        where: { id },
-        data: {
-          ...body,
-          dataInicioVigencia: body.dataInicioVigencia
-            ? new Date(body.dataInicioVigencia)
-            : undefined,
-          customFields: body.customFields as any,
-        },
+      const updatedCourse = await app.coursesService.updateCourse(id, {
+        ...body,
+        dataInicioVigencia: body.dataInicioVigencia
+          ? new Date(body.dataInicioVigencia)
+          : undefined,
+        customFields: body.customFields as any,
       });
 
       return reply.status(200).send({
@@ -379,7 +277,6 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
     }
   );
 
-  // DELETE /api/courses/:id - Delete course (soft delete)
   server.delete(
     '/courses/:id',
     {
@@ -404,51 +301,7 @@ const coursesRoutes: FastifyPluginAsync = async (app) => {
       const { id } = request.params as { id: string };
       const { force } = request.query as { force: boolean };
 
-      const existingCourse = await app.prisma.course.findUnique({
-        where: { id },
-        include: {
-          enrollments: { select: { id: true } },
-          disciplines: { select: { id: true } },
-        },
-      });
-
-      if (!existingCourse) {
-        return reply.status(404).send({
-          error: {
-            message: 'Course not found',
-            code: 'COURSE_NOT_FOUND',
-          },
-        });
-      }
-
-      const hasDependencies =
-        existingCourse.enrollments.length > 0 ||
-        existingCourse.disciplines.length > 0;
-
-      if (hasDependencies && !force) {
-        return reply.status(400).send({
-          error: {
-            message:
-              'Cannot delete course with dependencies. Use force=true to cascade delete.',
-            code: 'COURSE_HAS_DEPENDENCIES',
-            details: {
-              enrollments: existingCourse.enrollments.length,
-              disciplines: existingCourse.disciplines.length,
-            },
-          },
-        });
-      }
-
-      if (force) {
-        // Hard delete with cascade
-        await app.prisma.course.delete({ where: { id } });
-      } else {
-        // Soft delete
-        await app.prisma.course.update({
-          where: { id },
-          data: { ativo: false },
-        });
-      }
+      await app.coursesService.deleteCourse(id, force);
 
       return reply.status(200).send({
         data: {
