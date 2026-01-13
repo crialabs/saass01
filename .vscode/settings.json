@@ -36,5 +36,14 @@
   "typescript.preferences.includePackageJsonAutoImports": "on",
   "typescript.validate.enable": true,
   "prisma.pinToPrisma6": false,
+  "[powershell]": {
+    "editor.defaultFormatter": "ms-vscode.powershell"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
   "gitdoc.enabled": true
 }
